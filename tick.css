@@ -1,0 +1,139 @@
+body {
+    position: relative;
+    background-color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.scoreboard {
+    position: absolute;
+    top: 20px;
+    right: 10px;
+    display: flex;
+    justify-content: right;
+    align-content: right;
+    place-items: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 10px;
+    color: #171717;
+    font-size: 1.25em;
+}
+
+#score {
+    font-family: 'Fira Code', 'Source Code Pro', monospace;
+    font-variant-numeric: slashed-zero;
+    font-size: 1.25em;
+    font-weight: 500;
+    text-align-last: center;
+}
+
+.logoX {
+    font-size: 2em;
+    color: #d114d1;
+}
+
+.logoO {
+    font-size: 2em;
+    color: #f1ae30;
+}
+
+.purpleTxt {
+    color: #d114d1;
+}
+
+.orangeTxt {
+    color: #f1ae30;
+}
+
+#message {
+    position: absolute;
+    left: 25%;
+    transition: all 0.5s ease-in-out;
+    margin-top: 20px;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    padding: 10px;
+    max-width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    display: grid;
+    gap: 10px;
+    justify-self: center;
+    align-self: center;
+}
+
+.hide-message {
+    transform: translateY(-1000%);
+}
+
+.show-message {
+    transform: translateY(0);
+}
+
+.message-style {
+    padding: 10px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.confetti-img {
+    width: 35px;
+    height: 35px;
+    margin: 5px;
+    display: inline-block;
+}
+
+.play-again-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    margin: 2px auto;
+}
+
+.game-container {
+    position: relative;
+    background-color: black;
+    width: fit-content;
+    height: fit-content;
+    transform: translateY(50%);
+    margin-left: auto;
+    margin-right: auto;
+    display: grid;
+    gap: 10px;
+    justify-content: center;
+    align-content: center;
+    grid-template-areas: 
+        "cell-1 cell-2 cell-3"
+        "cell-4  cell-5 cell-6"
+        "cell-7 cell-8 cell-9";
+}
+
+#cell-1 { grid-area: cell-1;}
+#cell-2 { grid-area: cell-2;}
+#cell-3 { grid-area: cell-3;}
+#cell-4 { grid-area: cell-4;}
+#cell-5 { grid-area: cell-5;}
+#cell-6 { grid-area: cell-6;}
+#cell-7 { grid-area: cell-7;}
+#cell-8 { grid-area: cell-8;}
+#cell-9 { grid-area: cell-9;}
+
+.cell {
+    background-color: white;
+    padding: 40px;
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 50px;
+    font-weight: bold;
+    border: none;
+}
