@@ -864,7 +864,7 @@ grid.flat().map((cell) => {
                         
                         setTimeout(() => {
                             blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
-                        }, 1000); 
+                        }, .500); 
                     } else {
                         // User is clicking on an already clicked button.
                         console.log("User is clicking on an already clicked button.");
