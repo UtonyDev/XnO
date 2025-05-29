@@ -3,22 +3,38 @@ body {
     background-color: white;
     font-family: Arial, sans-serif;
     text-align: center;
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    height: 100vh;
+    grid-template-rows: 1fr 9fr;
+    grid-template-areas: 
+        'header'
+        'game-content'
+    ;
+    overflow-y: hidden;
+}
+
+.head {
+    grid-area: header;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-evenly;
+    place-items: center;
+    gap: 10px;
 }
 
 .scoreboard {
-    position: absolute;
-    top: 20px;
-    right: 10px;
-    display: flex;
-    justify-content: right;
-    align-content: right;
-    place-items: center;
+    position: relative;
     gap: 10px;
+    align-self: flex-end;
+    margin-right: 50px;
     padding: 10px;
     background-color: #f1f1f1;
     border-radius: 10px;
     color: #171717;
-    font-size: 1.25em;
+    font-size: 2.75em;
 }
 
 #score {
@@ -29,13 +45,29 @@ body {
     text-align-last: center;
 }
 
+.logo {
+    position: relative;
+    background-color: #f9f9f9;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(153, 243, 158, 0.1);
+    border-radius: 20%;
+}
+
+.logoN {
+    font-size: 2.5em;
+    position: absolute;
+    top: 25%;
+    left: 35%;
+    margin: 10px;
+}
+
 .logoX {
-    font-size: 2em;
+    font-size: 5em;  
     color: #d114d1;
 }
 
 .logoO {
-    font-size: 2em;
+    font-size: 5em;
     color: #f1ae30;
 }
 
@@ -56,7 +88,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #f9f9f9;
-    padding: 10px;
+    padding: 20px;
     max-width: 50%;
     margin-left: auto;
     margin-right: auto;
@@ -67,7 +99,7 @@ body {
 }
 
 .hide-message {
-    transform: translateY(-1000%);
+    transform: translateY(-10000%);
 }
 
 .show-message {
@@ -100,11 +132,11 @@ body {
 }
 
 .game-container {
+    grid-area: game-content;
     position: relative;
     background-color: black;
     width: fit-content;
     height: fit-content;
-    transform: translateY(50%);
     margin-left: auto;
     margin-right: auto;
     display: grid;
@@ -130,10 +162,10 @@ body {
 .cell {
     background-color: white;
     padding: 40px;
-    width: 50px;
-    height: 50px;
+    width: 200px;
+    height: 200px;
     text-align: center;
-    font-size: 50px;
+    font-size: 150px;
     font-weight: bold;
     border: none;
 }

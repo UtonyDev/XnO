@@ -4,13 +4,17 @@ const grid = [
     [7, 8, 9]
 ];
 
+// initialize array for clicked Cells 
+let clickedCellsArray = [];
+// initialize array for blocked Cells
+let blockedCellsArray = [];
+
 //Check localStorage for present score
 const storedScore = localStorage.getItem("score");
 if (storedScore) {
     const scoreValue = document.querySelector("#score");
     scoreValue.innerText = storedScore;
 }    
-
 // Function to display UI for message and action based on game outcome.
 const displayMessage = (msg) => {
             const messageContainer = document.querySelector("#message");
@@ -30,7 +34,7 @@ const displayMessage = (msg) => {
             button.innerText = "Play Again";
             button.classList.add("play-again-btn");
             button.addEventListener("click", () => {
-                // Reset the game state
+            // Reset the game state
                 const cells = document.querySelectorAll(".cell");
                 cells.forEach(cell => {
                     cell.classList.remove("clicked", "blocked", "purpleTxt", "orangeTxt");
@@ -38,9 +42,12 @@ const displayMessage = (msg) => {
                 });
                 messageContainer.classList.replace("show-message", "hide-message");
                 messageContainer.innerHTML = "";
+                // Empty the clicked and blocked cells arrays.
+                clickedCellsArray = [];
+                blockedCellsArray = [];
             });
 
-            if (msg !== "You Lose!, Better luck next time 😭") {
+            if (msg == "Congratulations!, You have won 😎") {
                 message.appendChild(img);
             }
             message.appendChild(text);
@@ -60,7 +67,6 @@ const handleScore = (factor) => {
     // Store the score in local storage
     localStorage.setItem("score", score);
 };
-
 // row array combinations
 const rowPairsArr = grid.map((row, i, rowArr) => {
     return row.map((colItem, j, colItems) => {
@@ -142,6 +148,59 @@ const hasGameWon = (blockedCellsArray) => {
     return isRowWin(blockedCellsArray) || isColWin(blockedCellsArray) || isDiagWin(blockedCellsArray)
 }
 
+// Remove duplicate values from an array
+const removeDuplicates = (arr) => {
+    return [...new Set(arr)];
+};
+
+// Generate the best possible combinations for the cell passed
+const GenerateBlockCombinations = (cell) => {
+let row, col;
+    for (let i = 0; i < 3; i++) {
+        const idx = grid[i].indexOf(cell);
+        if (idx !== -1) {
+            row = i;
+            col = idx;
+            break;
+        }
+    }
+
+    if (row === undefined || col === undefined) return [];
+
+    const winningLines = [
+        // Rows
+        [[0, 0], [0, 1], [0, 2]],
+        [[1, 0], [1, 1], [1, 2]],
+        [[2, 0], [2, 1], [2, 2]],
+        // Columns
+        [[0, 0], [1, 0], [2, 0]],
+        [[0, 1], [1, 1], [2, 1]],
+        [[0, 2], [1, 2], [2, 2]],
+        // Diagonals
+        [[0, 0], [1, 1], [2, 2]],
+        [[0, 2], [1, 1], [2, 0]],
+    ];
+
+    const neighbors = new Set();
+
+    for (const line of winningLines) {
+        for (let i = 0; i < 3; i++) {
+            const [r, c] = line[i];
+            if (grid[r][c] === cell) {
+                // Add the other two cells in this line
+                for (let j = 0; j < 3; j++) {
+                    if (j !== i) {
+                        neighbors.add(grid[line[j][0]][line[j][1]]);
+                    }
+                }
+            }
+        }
+    }
+
+    return [...neighbors];};
+console.log(GenerateBlockCombinations(2)); // Example usage, replace 1 with the cell you want to check
+
+
 function MarkCell(cellId, blockedCellsArray, randomCell) {
     const cell = document.getElementById(`${cellId}`);
     if (!cell.classList.contains("clicked") && !cell.classList.contains("blocked")) {
@@ -149,44 +208,45 @@ function MarkCell(cellId, blockedCellsArray, randomCell) {
         cell.classList.add("orangeTxt");
         cell.innerText = "O";
         console.log(`Game Blocked cell-${cellId}`);
-        // Check if game has won.
-        console.log("the blocked cells are ", blockedCellsArray)
-        if (blockedCellsArray.length > 1) {
-            // The game has played three times.
-            console.log("the game has played three times");
-            console.log("isRowWin: ", isRowWin(blockedCellsArray));
-            console.log("isColWin: ", isColWin(blockedCellsArray));
-            console.log("isDiagWin: ", isDiagWin(blockedCellsArray));
-        }
     } else {
+        // Here the cell picked from the possible options is already occupied, so try to follow up the blocked cell.
         console.log(`Cell-${cellId} is already occupied`);
-        // In this scenario the game should try to win by blocking the next best picked based on its best possible combinations cell.
-        const cell = document.getElementById(`${randomCell}`);
-        cell?.classList.add("blocked");
-        cell.classList.add("orangeTxt");
-        cell.innerText = "O";
-        console.log(`Game Blocked cell-${cellId}`);
-        // Check if game has won.
-        console.log("the blocked cells are ", blockedCellsArray)
-        if (blockedCellsArray.length > 1) {
-            // The game has played three times.
-            console.log("the game has played three times");
-            console.log("isRowWin: ", isRowWin(blockedCellsArray));
-            console.log("isColWin: ", isColWin(blockedCellsArray));
-            console.log("isDiagWin: ", isDiagWin(blockedCellsArray));
-        }
-    }
-};
+        // Pick a random cell from the blocked cells array.
+        console.log("the blocked cells are ", blockedCellsArray);
 
-let blockedCellsArray;
+        const nextBestCells = GenerateBlockCombinations(blockedCellsArray[0]).filter(cell => {
+            return !clickedCellsArray.includes(cell);
+        });
+        console.log("the next best cells to block are", nextBestCells);
+        const randomIndex = Math.floor(Math.random() * nextBestCells.length);
+        const nextBestCell = nextBestCells[randomIndex];
+        blockedCellsArray.push(nextBestCell);
+        console.log(`the next best cell to block is ${nextBestCell}`);
+        const cell = document.getElementById(`${nextBestCell}`);
+        cell?.classList.add("blocked");
+        cell?.classList.add("orangeTxt");
+        cell.innerText = "O";
+        console.log(`Game Blocked cell-${nextBestCell}`);
+    }
+
+    // Common logic for both paths
+    console.log("the blocked cells are ", removeDuplicates(blockedCellsArray));
+    if (blockedCellsArray.length > 2) {
+        console.log("the game has played three times");
+        console.log("isRowWin: ", isRowWin(blockedCellsArray));
+        console.log("isColWin: ", isColWin(blockedCellsArray));
+        console.log("isDiagWin: ", isDiagWin(blockedCellsArray));
+    }
+
+    // Delayed evaluation of win condition
+    setTimeout(() => {
+        if (blockedCellsArray.length > 2) {
+            hasGameWon(blockedCellsArray);
+        }
+    }, 0);
+}
 
 function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
-    // Manually update previously blocked cell to array after the cell has been filled.
-    const blockedCells = document.querySelectorAll(".blocked");
-    for (let i = 0; i < blockedCells.length; i++) {
-        blockedCellsArray.push(blockedCells[i].id);
-        console.log(blockedCellsArray);
-    }
 
     const otherCellOptions = options.filter((cell) => cell !== randomCell);
     console.log("other options: ", otherCellOptions);
@@ -230,7 +290,7 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
         return sortedPairs.some((diag) => isSamePair(pair, diag));
     });
 
-    // Returns the pair array common with the specified path arrays: rowPairArr, colPairArr, diagPairArr.
+    // Returns the pair array common with the specified path arrays: rowPairArr, colPairArr, diagPairArr e.t.c in order to determine where is all possible paths to block.
     const commonRowPair = pairSelections.filter((pair) => {
         const sortedPairs = [...rowPairsArr].flat().sort();
         return sortedPairs.some((row) => isSamePair(pair, row));
@@ -261,7 +321,10 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
 
     if (clickedCellsArray.length < 2) {
         console.log("The user has made the first move");
-        MarkCell(randomCell, blockedCellsArray, randomCell);
+        // Manually update previously blocked cell to array before blocking the cell.
+        blockedCellsArray.push(randomCell);
+        console.log("the blocked cell at 1st click is", removeDuplicates(blockedCellsArray));
+        MarkCell(randomCell, removeDuplicates(blockedCellsArray), randomCell);
         console.log(`Blocked cell-${randomCell}`);      
     } else if (clickedCellsArray.length === 2) {
         console.log("The user has made the second move");
@@ -282,7 +345,11 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
             console.log("The uncommon cell btw the combo and the selection and hence the cell to be used is", thirdCell);
 
             const cellId = thirdCell[0];
-            MarkCell(cellId, blockedCellsArray, randomCell);
+            // Manually update previously blocked cell to array before blocking the cell.
+            blockedCellsArray.push(cellId);
+            console.log("the blocked cell at 1st click is", removeDuplicates(blockedCellsArray));
+            MarkCell(cellId, removeDuplicates(blockedCellsArray), randomCell);
+
        } else if (isInCol) {
             // Returns the index of the column that contains the clicked cells.
             const colWinningCombo = getWinningCombination(winningColCombinations, commonColPair);
@@ -294,7 +361,11 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
             console.log("The uncommon cell btw the combo and the selection and hence the cell to be used is", thirdCell);
 
             const cellId = thirdCell[0];
-            MarkCell(cellId, blockedCellsArray, randomCell);
+            // Manually update previously blocked cell to array before blocking the cell.
+            blockedCellsArray.push(cellId);
+            console.log("the blocked cell at 1st click is", removeDuplicates(blockedCellsArray));
+            MarkCell(cellId, removeDuplicates(blockedCellsArray), randomCell);
+
        } else if (isInDiag) {
             // Returns the index of the diagonal that contains the clicked cells.
             const diagWinningCombo = getWinningCombination(winningDiagCombinations, commonDiagPair);
@@ -306,7 +377,11 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
             console.log("The uncommon cell btw the combo and the selection and hence the cell to be used is", thirdCell);
 
             const cellId = thirdCell[0];
-            MarkCell(cellId, blockedCellsArray, randomCell);
+            // Manually update previously blocked cell to array before blocking the cell.
+            blockedCellsArray.push(cellId);
+            console.log("the blocked cell at 1st click is", removeDuplicates(blockedCellsArray));
+            MarkCell(cellId, removeDuplicates(blockedCellsArray), randomCell);
+            
        } else {
             // Here the clicked cells dont line up to lead to a win path.
             console.log("Here the clicked cells dont line up to lead to a win path.");
@@ -367,15 +442,23 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
 
                 // here the occupiued cells are only clicked and the winning combo cant be used to generate best selections 
                 if (cellElement.classList.contains("clicked") && cellElement.classList.contains("blocked")) {
-                    console.log(" use this cell first", randomCell)
-                    MarkCell(newCell, blockedCellsArray)
+                    console.log(" use this cell first", newCell)
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(newCell);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(newCell, removeDuplicates(blockedCellsArray), randomCell);
+                    
                 } else {
-                    MarkCell(randomCell, blockedCellsArray);
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(cellId);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(randomCell, removeDuplicates(blockedCellsArray), randomCell);
                     console.log(`Blocked cell-${randomCell}`);
                 };
             } else {
                 const cellToBlock = document.getElementById(`${randomPath[randomIndex]}`);
-                MarkCell(randomPath[randomIndex], blockedCellsArray);
+                MarkCell(randomPath[randomIndex], removeDuplicates(blockedCellsArray), randomCell);
+
                 console.log(`Blocked cell-${cellToBlock.id}`);
             }    
         }
@@ -401,6 +484,12 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
             const factor = 2;
             handleScore(factor);
         
+        } else if (clickedCellsArray.length == 5 && blockedCellsArray.length === 4) {
+            // Here the game ends at a draw display the draw message and reset the game.
+            const msg = "It's a draw! 😐";
+            displayMessage(msg);
+            // Deduct score by -1 to encourage the user to play again. 
+            handleScore(-1);
         } else {
             console.log("The user has not made a winning move try and block");
             // Searching the Clicked Cells Array for the last two moves by using the two pair combinations created to search each segment and checking if the next path is blocked.
@@ -433,9 +522,72 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
             };
                 console.log("is the Third Cell in row currently occupied ? ", isCellFilled(row3rdCell));
                 console.log("is the Third Cell in column currently occupied ? ", isCellFilled(col3rdCell));
-                console.log("is the Third Cell in diagonal currently occupied ? ", isCellFilled(diag3rdCell))
+                console.log("is the Third Cell in diagonal currently occupied ? ", isCellFilled(diag3rdCell));
 
-            if (isInRow && !isCellFilled(row3rdCell)) {
+            // Check if the Game is in the path to win.
+            const numBlockedCells = [...blockedCellsArray].sort().map(Number);
+            console.log("the number blocked cells are", numBlockedCells)
+            
+            // Return the best possible pairs of blocked cells.
+            function getAllPairs(arr) {
+                const blockedPairs = [];
+                for (let i = 0; i < arr.length; i++) {
+                    for (let j = i + 1; j < arr.length; j++) {
+                        blockedPairs.push([arr[i], arr[j]]);
+                    }
+                }
+                return blockedPairs;
+            }
+
+            const blockedCellsPairs = getAllPairs(numBlockedCells);
+            console.log("the pairs of blocked cells are", blockedCellsPairs);
+            // Check if Blocked cells are in a winning row, column or diagonal path as well.
+            const isBlockInRow = blockedCellsPairs.some((pair) => {
+                console.log("The split pair selections  are: ", blockedCellsPairs)
+                const sortedPairs = [...rowPairsArr].flat().sort();
+                return sortedPairs.some((row) => isSamePair(pair, row));
+            });
+            const isBlockInCol = blockedCellsPairs.some((pair) => {
+                console.log("The split pair selections are: ", blockedCellsPairs)
+                const sortedPairs = [...colPairsArr].flat().sort();
+                return sortedPairs.some((col) => isSamePair(pair, col));
+            });
+            const isBlockInDiag = blockedCellsPairs.some((pair) => {
+                console.log("The split pair selections are: ", blockedCellsPairs)
+                const sortedPairs = [...diagPairsArr].flat().sort();
+                return sortedPairs.some((diag) => isSamePair(pair, diag));
+            });
+            console.log("is the blocked cells in a row? ", isBlockInRow);
+            console.log("is the blocked cells in a column? ", isBlockInCol);
+            console.log("is the blocked cells in a diagonal? ", isBlockInDiag);
+
+            const comBlckRowPair = blockedCellsPairs.filter((pair) => {
+                    const sortedPairs = [...rowPairsArr].flat().sort();
+                    return sortedPairs.some((row) => isSamePair(pair, row));
+            }).flat();
+            const comBlckColPair = blockedCellsPairs.filter((pair) => {
+                const sortedPairs = [...colPairsArr].flat().sort();
+                return sortedPairs.some((col) => isSamePair(pair, col));
+            }).flat();
+            const comBlckDiagPair = blockedCellsPairs.filter((pair) => {
+                const sortedPairs = [...diagPairsArr].flat().sort();
+                return sortedPairs.some((diag) => isSamePair(pair, diag));
+            }).flat();
+
+            console.log("the common blocked row pair is", comBlckRowPair);
+            console.log("the common blocked column pair is", comBlckColPair);
+            console.log("the common blocked diagonal pair is", comBlckDiagPair);
+
+            // Get winning combo for that common pair so to extract the third cell to win.
+            const row3rdBlckCell = nextCell(getWinningCombination(winningRowCombinations, comBlckRowPair), comBlckRowPair);
+            const col3rdBlckCell = nextCell(getWinningCombination(winningColCombinations, comBlckColPair), comBlckColPair);
+            const diag3rdBlckCell = nextCell(getWinningCombination(winningDiagCombinations, comBlckDiagPair), comBlckDiagPair);
+            console.log("the third cell to be blocked by from the blocked cells in row is", row3rdBlckCell);
+            console.log("the third cell to be blocked by from the blocked cells in column is", col3rdBlckCell);
+            console.log("the third cell to be blocked by from the blocked cells in diagonal is", diag3rdBlckCell);
+
+            // Check if the blocked cells are in a winning path.
+            if (isInRow && !isCellFilled(row3rdCell) && isCellFilled(row3rdBlckCell)) {
                 console.log("the blocked cells array is after the user has place THRICE from crow is", blockedCellsArray);
 
                 // Returns the index of the row that contains the clicked cells.
@@ -445,16 +597,26 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
                 console.log("the matching row combination is", rowWinningCombo);
 
                 const thirdCell = nextCell(rowWinningCombo, commonRowPair);
-                console.log("the clicked cells are: ", clickedCellsArray)
+                console.log("the clicked cells are: ", clickedCellsArray);
                 console.log("The uncommon cell btw the combo and the selection and hence the cell to be used is", thirdCell);
+                // First check if the third cell in the blocked cells is occupied
+                if (isBlockInRow && !isCellFilled(row3rdBlckCell)) { 
+                    // If it is, then we need to block it
+                    console.log("Blocking the third cell in row:", row3rdBlckCell);
+                    blockedCellsArray.push(row3rdBlckCell[0]);
+                    MarkCell(row3rdBlckCell[0], removeDuplicates(blockedCellsArray), randomCell);
+                    // Add the blocked cells to the blockedCellsArray then check if game has won
+                    
+                } else {
+                    // Block the clicked cell third cell.
+                    const cellId = thirdCell[0];
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(cellId);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(cellId, removeDuplicates(blockedCellsArray), randomCell);
 
-                const cellId = thirdCell[0];
-                MarkCell(cellId, blockedCellsArray, randomCell);
-                setTimeout(() => {
-                    hasGameWon(blockedCellsArray);
-                });
-
-            } else if (isInCol && !isCellFilled(col3rdCell)) {
+                }
+            } else if (isInCol && !isCellFilled(col3rdCell) && isCellFilled(col3rdBlckCell)) {
                 console.log("the blocked cells array is after the user has place THRICE from col is", blockedCellsArray);
 
                 const colWinningCombo = getWinningCombination(winningColCombinations, commonColPair);
@@ -466,12 +628,22 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
                 console.log("the clicked cells are: ", clickedCellsArray)
                 console.log("The uncommon cell btw the combo and the selection and hence the cell to be used is", thirdCell);
 
-                const cellId = thirdCell[0];
-                MarkCell(cellId, blockedCellsArray, randomCell);
-                setTimeout(() => {
-                    hasGameWon(blockedCellsArray);
-                })
-            } else if (isInDiag && !isCellFilled(diag3rdCell)) {
+                if (isBlockInCol && !isCellFilled(col3rdBlckCell)) { 
+                    // If it is, then we need to block it
+                    console.log("Blocking the third cell in column:", col3rdBlckCell);
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(col3rdBlckCell[0]);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(col3rdBlckCell[0], removeDuplicates(blockedCellsArray), randomCell);
+                } else {
+                    // Block the clicked cell third cell.
+                    const cellId = thirdCell[0];
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(cellId);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(cellId, removeDuplicates(blockedCellsArray), randomCell);
+                }
+            } else if (isInDiag && !isCellFilled(diag3rdCell) && isCellFilled(diag3rdBlckCell)) {
                 console.log("the blocked cells array is after the user has place THRICE from diag is", blockedCellsArray);
 
                 const diagWinningCombo = getWinningCombination(winningDiagCombinations, commonDiagPair);
@@ -483,132 +655,221 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
                 console.log("the clicked cells are: ", clickedCellsArray)
                 console.log("The uncommon cell btw the combo and the selection and hence the cell to be used is", thirdCell);
 
-                const cellId = thirdCell[0];
-                MarkCell(cellId, blockedCellsArray, randomCell);
-                setTimeout(() => {
-                    hasGameWon(blockedCellsArray);
-                })
+                if (isBlockInDiag && !isCellFilled(diag3rdBlckCell)) { 
+                    // If it is, then we need to block it
+                    console.log("Blocking the third cell in column:", diag3rdBlckCell);
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(diag3rdBlckCell[0]);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(diag3rdBlckCell[0], removeDuplicates(blockedCellsArray), randomCell);
+                } else {
+                    // Block the clicked cell third cell.
+                    const cellId = thirdCell[0];
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(cellId);
+                    console.log("the blocked cell at 1st click is", blockedCellsArray);
+                    MarkCell(cellId, removeDuplicates(blockedCellsArray), randomCell);
+                }
             } else {
                 // No winning path found.
-                console.log("The clicked cells dont line up to lead to a win path, so the game should try to block the next best picked based on its best possible combinations cell.");
-                console.log("the blocked cells array is after the user has place THRICE is", blockedCellsArray);
+                console.log("The clicked cells dont line up to lead to a win path");
+                console.log("the blocked cells array is after the user has place THRICE is", removeDuplicates(blockedCellsArray));
+                // The clicked cells dont line up to lead to a win path for the clicked cells so we check if the blocked cells do. //
+                if (isBlockInRow && !isCellFilled(row3rdBlckCell)) {
+                    // If the blocked cells are in a winning path.
+                    console.log("Blocking the third cell in row:", row3rdBlckCell);
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(row3rdBlckCell[0]); 
+                    console.log("the blocked cell at > 2 click is", removeDuplicates(blockedCellsArray)); 
+                    MarkCell(row3rdBlckCell[0], removeDuplicates(blockedCellsArray), randomCell);
+                    
+                } else if (isBlockInCol && !isCellFilled(col3rdBlckCell)) {
+                    // If the blocked cells are in a winning path.
+                    console.log("Blocking the third cell in column:", col3rdBlckCell);
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(col3rdBlckCell[0]);
+                    console.log("the blocked cell at > 2 click is", removeDuplicates(blockedCellsArray)); 
+                    MarkCell(col3rdBlckCell[0], removeDuplicates(blockedCellsArray), randomCell);
+                    
 
+                } else if (isBlockInDiag && !isCellFilled(diag3rdBlckCell)) {
+                    // If the blocked cells are in a winning path.
+                    console.log("Blocking the third cell in diagonal:", diag3rdBlckCell);
+                    // Manually update previously blocked cell to array before blocking the cell.
+                    blockedCellsArray.push(diag3rdBlckCell[0]);
+                    console.log("the blocked cell at > 2 click is", removeDuplicates(blockedCellsArray));
+                    MarkCell(diag3rdBlckCell[0], removeDuplicates(blockedCellsArray), randomCell);
 
-                // here theres no clear path to block so pick any of the unblocked or unclicked cells
-                const clickedCells = [...clickedCellsArray];
-                const blockedCells = [...blockedCellsArray];
-                const occupiedCells = clickedCells.concat(blockedCells).sort().map(Number);
-                console.log("the cells occupied are", occupiedCells);
-
-                const arr = [...grid].flat();
-                console.log("all the cell ", arr);
-
-                const emptyCells = arr.filter((cell) => !occupiedCells.includes(cell));
-                console.log('empty cells are', emptyCells);
-
-                const randomIndex = Math.floor(Math.random() * emptyCells.length);
-                const randomCell = emptyCells[randomIndex];
-                
-                const cellToBlock = document.getElementById(`${randomCell}`);
-                MarkCell(randomCell, blockedCellsArray, randomCell);
-                setTimeout(() => {
-                    hasGameWon(blockedCellsArray);
-                })
-
-                // check if the cell is occupied before blocking
-                console.log(`Blocked cell-${cellToBlock.id}`);
-
+                } else {
+                    // No winning path found for blocked cells.
+                    console.log("No winning path found for blocked cells.");
+                    // here theres no clear path to block so pick any of the unblocked or unclicked cells
+                    const clickedCells = [...clickedCellsArray];
+                    const blockedCells = [...blockedCellsArray];
+                    const occupiedCells = clickedCells.concat(blockedCells).sort().map(Number);
+                    console.log("the cells occupied are", occupiedCells);
+                    const arr = [...grid].flat();
+                    console.log("all the cell ", arr);
+                    const emptyCells = arr.filter((cell) => !occupiedCells.includes(cell));
+                    console.log('empty cells are', emptyCells);
+                    // Check if the empty cells array is empty is so this indicates a draw.
+                    if (emptyCells.length == 0) {
+                        console.log("The game has ended in a DRAW!");
+                        // Here the game ends at a draw display the draw message and reset the game.
+                        const msg = "It's a draw!, 😐";
+                        displayMessage(msg);
+                        // Deduct score by -1 to encourage the user to play again. 
+                        handleScore(-1);
+                    } else {
+                        const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                        const randomCell = emptyCells[randomIndex];
+                        const cellToBlock = document.getElementById(`${randomCell}`);                
+                        console.log(`Blocked cell-${cellToBlock.id}`);
+                        // Manually update previously blocked cell to array before blocking the cell.
+                        blockedCellsArray.push(randomCell);
+                        console.log("the blocked cell at > 2 click is", removeDuplicates(blockedCellsArray)); 
+                        MarkCell(randomCell, removeDuplicates(blockedCellsArray), randomCell);
+                    }
+                    
+                }   
             }
         }
-    }
-    // Tomorrow just remove repititions from blocked cells array
-    for (let i = 0; i < blockedCells.length; i++) {
-        blockedCellsArray.push(blockedCells[i].id);
-        console.log(blockedCellsArray);
-    }
+    } 
 }
 
 grid.flat().map((cell) => {
-    console.log(`cell-${cell}`);
     const container = document.querySelector(".game-container");
     const cellElement = document.createElement("div");
     cellElement.innerText = "";
 
+    
+    //const currentCell = document.getElementById(`${cell}`);
+    //if (!currentCell.classList.contains("clicked") || !currentCell.classList.contains("blocked")) {
+        // If the button has not been clicked or blocked allow the the user to click. 
+    //} else {
+        // The cell you clicked has been clicked or blocked.
+      //  console.log("The cell you clicked has been clicked or blocked.");
+        
+    //};
+    //
     cellElement.addEventListener("click", () => {
-        console.log(`User clicked on cell-${cell}`);
-        cellElement.classList.add("clicked");
-        cellElement.classList.add("purpleTxt");
-        // Toggle the text to "X" if clicked, otherwise empty
-        cellElement.innerText = cellElement.classList.contains("clicked") ? "X" : "";
-        const clickedCells = document.querySelectorAll(".clicked");
-        console.log(`${clickedCells.length} cell clicked`);
-        // initialize array for clicked Cells 
-        let clickedCellsArray = [];
-        // loop through clicked cells & store ids in array
-        for (let i = 0; i < clickedCells.length; i++) {
-            clickedCellsArray.push(clickedCells[i].id);
-            console.log(clickedCellsArray);
-        }
-        // check if clicked cells are in a winning combination     
-        if (clickedCellsArray.length > 0 && 
-            (clickedCellsArray.includes("1") || clickedCellsArray.includes("3") || clickedCellsArray.includes("7") || clickedCellsArray.includes("9"))) {
-            console.log("You clicked on some of the vertex cells");
+            console.log(`User clicked on cell-${cell}`);
+            cellElement.classList.add("clicked");
+            cellElement.classList.add("purpleTxt");
+            // Toggle the text to "X" if clicked, otherwise empty
+            cellElement.innerText = cellElement.classList.contains("clicked") ? "X" : "";
+            // Add the clicked cell to the cells array.
+            const clickedCells = document.querySelectorAll(".clicked");
+            console.log(`${clickedCells.length} cell clicked`);
+    
+                // loop through clicked cells & store ids in array
+                for (let i = 0; i < clickedCells.length; i++) {
+                    clickedCellsArray.push(clickedCells[i].id);
+                    console.log(clickedCellsArray);
+                }
 
-            const rowIndex = grid.findIndex(row => row.includes(cell));
-            const colIndex = grid.map(row => {return row.indexOf(cell)}).filter(indx => indx >= 0);
-            console.log(`rowIndex: ${rowIndex}, colIndex: ${colIndex}`);
-            // Best possible combinations for game to block for vertex cells clicked.
-            const blockCombinations = [
-                grid[rowIndex].at( (1 + (-colIndex)) < 0 ? ((1 + (-colIndex)) * -1) : (1 + (-colIndex)) ),
-                grid[(rowIndex + 1) > 2 ? (rowIndex - 1) : (rowIndex + 1)].at((-colIndex) < 0 ? ((- colIndex) * -1) : ((-colIndex))), 
-                grid[(rowIndex + 1) > 2 ? (rowIndex - 1) : (rowIndex + 1)].at( (1 + (-colIndex)) < 0 ? ((1 + (-colIndex)) * -1) : (1 + (-colIndex)) ),
-            ];
-            console.log(`blockCombinations: ${blockCombinations}`);
-            const randomIndex = Math.floor(Math.random() * blockCombinations.length);
-            const randomCell = blockCombinations[randomIndex];
+                // Validation logic for user input on occupied cell.
+                const isPrevSameAsCurrent = (clickedCellsArray.at(-1) ==  clickedCellsArray.at(-2)); 
+                    console.log("is the lastest cell same as the former ", isPrevSameAsCurrent )
+                
+                if (clickedCellsArray.length > 0 && 
+                    (clickedCellsArray.includes("1") || clickedCellsArray.includes("3") || clickedCellsArray.includes("7") || clickedCellsArray.includes("9"))) {
+                    // Get the three best combinations to block based on the cell that was clicked.
+                    console.log("You clicked on some of the vertex cells");
 
-            // initialize array for clicked Cells 
-            let blockedCellsArray = [];
-            console.log("the blocked cells array after timeout is ", blockedCellsArray)
+                    const rowIndex = grid.findIndex(row => row.includes(cell));
+                    const colIndex = grid.map(row => {return row.indexOf(cell)}).filter(indx => indx >= 0);
+                    console.log(`rowIndex: ${rowIndex}, colIndex: ${colIndex}`);
+                    // Best possible combinations for game to block for vertex cells clicked.
+                    const blockCombinations = [
+                        grid[rowIndex].at( (1 + (-colIndex)) < 0 ? ((1 + (-colIndex)) * -1) : (1 + (-colIndex)) ),
+                        grid[(rowIndex + 1) > 2 ? (rowIndex - 1) : (rowIndex + 1)].at((-colIndex) < 0 ? ((- colIndex) * -1) : ((-colIndex))), 
+                        grid[(rowIndex + 1) > 2 ? (rowIndex - 1) : (rowIndex + 1)].at( (1 + (-colIndex)) < 0 ? ((1 + (-colIndex)) * -1) : (1 + (-colIndex)) ),
+                    ];
+                    console.log(`blockCombinations: ${blockCombinations}`);
+                    const randomIndex = Math.floor(Math.random() * blockCombinations.length);
+                    const randomCell = blockCombinations[randomIndex];
+                    console.log(`randomCell: ${randomCell}`);
 
-            setTimeout(() => {
-                blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
-            }, 1000);
+                    // Compare the latest cell clicked with the former for equality to prevent the user from clicking the same cell twice.
+                    if (!isPrevSameAsCurrent) {
+                        // Only add the blocked cell to the blockedCellsArray if it is the first click.
+                        // This is to prevent the blocked cell from being added multiple times.
+                        if (clickedCellsArray.length === 1) {            
+                            // Manually update previously blocked cell to array before blocking the cell.
+                            blockedCellsArray.push(randomCell);
+                            console.log("the blocked cell at 1st click is", blockedCellsArray)
+                        }
+                        
+                        setTimeout(() => {
+                            blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
+                        }, 1000); 
+                    } else {
+                        // User is clicking on an already clicked button.
+                        console.log("User is clicking on an already clicked button.");
+                    }
+                } else if (clickedCellsArray.length > 0 && 
+                    (clickedCellsArray.includes("2") || clickedCellsArray.includes("4") || clickedCellsArray.includes("6") || clickedCellsArray.includes("8"))) {
+                    // Get the three best combinations to block based on the cell that was clicked.
+                    console.log("You clicked on some of the edge cells");
+                    const rowIndex = grid.findIndex(row => row.includes(cell));
+                    const colIndex = grid.map(row => {return row.indexOf(cell)}).filter(indx => indx >= 0);
+                    console.log(`rowIndex: ${rowIndex}, colIndex: ${colIndex}`);
 
-        } else if (clickedCellsArray.length > 0 && 
-            (clickedCellsArray.includes("2") || clickedCellsArray.includes("4") || clickedCellsArray.includes("6") || clickedCellsArray.includes("8"))) {
-            console.log("You clicked on some of the edge cells");
-            const rowIndex = grid.findIndex(row => row.includes(cell));
-            const colIndex = grid.map(row => {return row.indexOf(cell)}).filter(indx => indx >= 0);
-            console.log(`rowIndex: ${rowIndex}, colIndex: ${colIndex}`);
-
-            // Best possible combinations for game to block for edged cells clicked.
-            const blockCombinations = [
-                grid[rowIndex].at( (1 + (-colIndex)) < 0 ? ((1 + (-colIndex)) * -1) : (1 + (-colIndex)) ),
-                grid[(rowIndex + 1) > 2 ? (rowIndex - 1) : (rowIndex + 1)].at((-colIndex) < 0 ? ((- colIndex) * -1) : ((-colIndex))), 
-                grid[(rowIndex === 1) ? (rowIndex - 1) : (rowIndex)].at((colIndex == 1) ? 2 : colIndex == 0 ? 0 : 2),
-            ];
-            console.log(`blockCombinations: ${blockCombinations}`);
-            const randomIndex = Math.floor(Math.random() * blockCombinations.length);
-            const randomCell = blockCombinations[randomIndex];
-            let blockedCellsArray = [];
-
-            setTimeout(() => {
-                blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
-            }, 1000);
-        } else {
-            console.log("The Center cell was clicked");
-            const centerCellCombos = grid.flat().filter((num) => num !== 5);
-            console.log(centerCellCombos);
-            // Pick all 8 random best combinations for the center cell.
-            const randomIndex = Math.floor(Math.random() * centerCellCombos.length);
-            const randomCell = centerCellCombos[randomIndex];
-            const blockedCellsArray = [];
-
-            setTimeout(() => {
-                blockCell(randomCell, centerCellCombos, clickedCellsArray, blockedCellsArray)
-            }, 1000);
-        }
+                    // Best possible combinations for game to block for edged cells clicked.
+                    const blockCombinations = [
+                        grid[rowIndex].at( (1 + (-colIndex)) < 0 ? ((1 + (-colIndex)) * -1) : (1 + (-colIndex)) ),
+                        grid[(rowIndex + 1) > 2 ? (rowIndex - 1) : (rowIndex + 1)].at((-colIndex) < 0 ? ((- colIndex) * -1) : ((-colIndex))), 
+                        grid[(rowIndex === 1) ? (rowIndex - 1) : (rowIndex)].at((colIndex == 1) ? 2 : colIndex == 0 ? 0 : 2),
+                    ];
+                    console.log(`blockCombinations: ${blockCombinations}`);
+                    const randomIndex = Math.floor(Math.random() * blockCombinations.length);
+                    const randomCell = blockCombinations[randomIndex];
+                    console.log(`randomCell: ${randomCell}`);
+                    // Compare the latest cell clicked with the former for equality to prevent the user from clicking the same cell twice.
+                    if (!isPrevSameAsCurrent) {
+                        // Only add the blocked cell to the blockedCellsArray if it is the first click.
+                        // This is to prevent the blocked cell from being added multiple times.
+                        if (clickedCellsArray.length === 1) {            
+                            // Manually update previously blocked cell to array before blocking the cell.
+                            blockedCellsArray.push(randomCell);
+                            console.log("the blocked cell at 1st click is", blockedCellsArray)
+                        }
+                        
+                        setTimeout(() => {
+                            blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
+                        }, 1000); 
+                    } else {
+                        // User is clicking on an already clicked button.
+                        console.log("User is clicking on an already clicked button.");
+                    }
+                } else {
+                    // Get the 8 best combinations to block since the cell was clicked.
+                    console.log("The Center cell was clicked");
+                    const centerCellCombos = grid.flat().filter((num) => num !== 5);
+                    console.log(centerCellCombos);
+                    // Pick all 8 random best combinations for the center cell.
+                    const randomIndex = Math.floor(Math.random() * centerCellCombos.length);
+                    const randomCell = centerCellCombos[randomIndex];
+                    console.log(`randomCell: ${randomCell}`);
+                 // Compare the latest cell clicked with the former for equality to prevent the user from clicking the same cell twice.
+                    if (!isPrevSameAsCurrent) {
+                        // Only add the blocked cell to the blockedCellsArray if it is the first click.
+                        // This is to prevent the blocked cell from being added multiple times.
+                        if (clickedCellsArray.length === 1) {            
+                            // Manually update previously blocked cell to array before blocking the cell.
+                            blockedCellsArray.push(randomCell);
+                            console.log("the blocked cell at 1st click is", blockedCellsArray)
+                        }
+                        
+                        setTimeout(() => {
+                            blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
+                        }, 1000); 
+                    } else {
+                        // User is clicking on an already clicked button.
+                        console.log("User is clicking on an already clicked button.");
+                    }
+                }
     });
 
     container.appendChild(cellElement);
