@@ -67,6 +67,20 @@ const handleScore = (factor) => {
     // Store the score in local storage
     localStorage.setItem("score", score);
 };
+
+// Manual function to reset game without 
+const resetGame = () => {
+    // Reset the game state
+    const cells = document.querySelectorAll(".cell");
+    cells.forEach(cell => {
+        cell.classList.remove("clicked", "blocked", "purpleTxt", "orangeTxt");
+        cell.innerText = "";
+    });
+    // Empty the clicked and blocked cells arrays.
+    clickedCellsArray = [];
+    blockedCellsArray = [];
+}
+
 // row array combinations
 const rowPairsArr = grid.map((row, i, rowArr) => {
     return row.map((colItem, j, colItems) => {
