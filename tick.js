@@ -16,18 +16,19 @@ if (storedScore) {
     scoreValue.innerText = storedScore;
 }    
 // Function to display UI for message and action based on game outcome.
-const displayMessage = (msg) => {
+const displayMessage = (msg, imagesrc) => {
             const messageContainer = document.querySelector("#message");
 
             const message = document.createElement("div");
             message.classList.add("message-style");
 
             const img = document.createElement("img");
-            img.src = "confetti.png";
+            img.src = imagesrc;
             img.alt = "Congratulations!";
-            img.classList.add("confetti-img");
+            img.classList.add("outcome-img");
             
             const text = document.createElement("span");
+            text.classList.add("text-style");
             text.innerText = msg;
 
             const button = document.createElement("button");
@@ -47,9 +48,7 @@ const displayMessage = (msg) => {
                 blockedCellsArray = [];
             });
 
-            if (msg == "Congratulations!, You have won 😎") {
-                message.appendChild(img);
-            }
+            message.appendChild(img);
             message.appendChild(text);
             message.appendChild(button);
 
@@ -154,7 +153,8 @@ const hasGameWon = (blockedCellsArray) => {
         console.log("The Winning function was called, and the Game has won.");
         // Display message to the user.
         const msg = "You Lose!, Better luck next time 😭"
-        displayMessage(msg);
+        const imgsrc = "lose.png";
+        displayMessage(msg, imgsrc);
         // Decrement score value by -2.
         const factor = -2;
         handleScore(factor)
@@ -493,15 +493,17 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
             console.log("The user has made a winning move");
             // Display UI for message and action based on game outcome.
             const msg = "Congratulations!, You have won 😎";
-            displayMessage(msg);
+            const imgsrc = "confetti.png";
+            displayMessage(msg, imgsrc);
             // Handle score state 
             const factor = 2;
             handleScore(factor);
         
         } else if (clickedCellsArray.length == 5 && blockedCellsArray.length === 4) {
             // Here the game ends at a draw display the draw message and reset the game.
-            const msg = "It's a draw! 😐";
-            displayMessage(msg);
+            const msg = "It's a Tie! 😐";
+            const imgsrc = "tie.png";
+            displayMessage(msg, imgsrc);
             // Deduct score by -1 to encourage the user to play again. 
             handleScore(-1);
         } else {
@@ -730,8 +732,9 @@ function blockCell(randomCell, options, clickedCellsArray, blockedCellsArray) {
                     if (emptyCells.length == 0) {
                         console.log("The game has ended in a DRAW!");
                         // Here the game ends at a draw display the draw message and reset the game.
-                        const msg = "It's a draw!, 😐";
-                        displayMessage(msg);
+                        const msg = "It's a Tie!, 😐";
+                        const imgsrc = "tie.png";
+                        displayMessage(msg, imgsrc);
                         // Deduct score by -1 to encourage the user to play again. 
                         handleScore(-1);
                     } else {
@@ -866,6 +869,11 @@ grid.flat().map((cell) => {
                     const randomIndex = Math.floor(Math.random() * centerCellCombos.length);
                     const randomCell = centerCellCombos[randomIndex];
                     console.log(`randomCell: ${randomCell}`);
+
+                    const rowIndex = grid.findIndex(row => row.includes(cell));
+                    const colIndex = grid.map(row => {return row.indexOf(cell)}).filter(indx => indx >= 0);
+                    console.log(`rowIndex: ${rowIndex}, colIndex: ${colIndex}`);
+
                  // Compare the latest cell clicked with the former for equality to prevent the user from clicking the same cell twice.
                     if (!isPrevSameAsCurrent) {
                         // Only add the blocked cell to the blockedCellsArray if it is the first click.
@@ -877,8 +885,8 @@ grid.flat().map((cell) => {
                         }
                         
                         setTimeout(() => {
-                            blockCell(randomCell, blockCombinations, clickedCellsArray, blockedCellsArray);
-                        }, .500); 
+                            blockCell(randomCell, centerCellCombos, clickedCellsArray, blockedCellsArray);
+                        }, 1000); 
                     } else {
                         // User is clicking on an already clicked button.
                         console.log("User is clicking on an already clicked button.");
