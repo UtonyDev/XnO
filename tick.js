@@ -428,8 +428,9 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
         console.log("Function B is already running. Skipping new call.");
         return Promise.resolve("Already running"); // Or reject, depending on desired behavior
     }
-
+    // Set the 'Processing' flag to true to prevent the user from clicking.
     isProcessing = true;
+
     await new Promise((resolve) => {
     // Enclose entire game strategy logic in a timeout to simulate game processing.
     setTimeout(() => {
@@ -931,6 +932,10 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
                 }
             }
         } 
+
+        // Reset the 'Processing' flag after the timeout to allow the user click another cell.
+        isProcessing = false
+        console.log("Game is DONE processing");
     }, 1000);
     // End of Enclose for entire game strategy logic in a timeout to simulate game processing.
     });
