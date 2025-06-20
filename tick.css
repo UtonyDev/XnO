@@ -1,7 +1,6 @@
 body {
     position: relative;
     background-color: white;
-    font-family: Arial, sans-serif;
     text-align: center;
     display: grid;
     justify-items: center;
@@ -14,6 +13,19 @@ body {
         'game-content'
     ;
     overflow: hidden;
+}
+
+.inter-rounded {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.varela-round-regular {
+  font-family: "Varela Round", sans-serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 .head {
