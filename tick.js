@@ -15,7 +15,16 @@ const storedScore = localStorage.getItem("score");
 if (storedScore) {
     const scoreValue = document.querySelector("#score");
     scoreValue.innerText = storedScore;
-}    
+} 
+
+// Function to handle settings.
+const settingsIcon = document.querySelector('.settings-icon');
+const settings = document.querySelector('.settings');
+
+settingsIcon.addEventListener('click', () => {
+    settings.classList.toggle('hide-settings');
+})
+
 // Function to display UI for message and action based on game outcome.
 const displayMessage = (msg) => {
     const messageContainer = document.querySelector("#message");
@@ -82,6 +91,7 @@ const resetGame = () => {
         cell.classList.remove("clicked", "blocked", "purpleTxt", "orangeTxt");
         cell.innerText = "";
     });
+    settings.classList.add("hide-settings")
     // Empty the clicked and blocked cells arrays.
     clickedCellsArray = [];
     blockedCellsArray = [];

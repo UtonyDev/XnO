@@ -45,7 +45,22 @@
         </h1>
         <div class="tools">
             <span class="scoreboard"> Score: <span id="score">0000</span> </span>
-            <button class="reset" onclick="resetGame()"> Reset </button>
+
+            <div class="settings-icon" onclick="showSettings()"> 
+                <img src="settings.png" alt="An icon of a settings gear" class="settings-image">
+            </div>
+
+            <div class="settings hide-settings">
+                <h1 class="settings-title">Settings</h1>
+
+                <ul class="settings-list ">
+                    <li class="setting"> Game speed 
+                        <input type="range" name="speed-slider" id="speed">
+                    </li>
+                    <li class="setting reset" onclick="resetGame()"> Reset </li>
+                </ul>
+            </div>
+
         </div>
         
     </header>
