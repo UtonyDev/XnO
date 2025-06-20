@@ -8,7 +8,8 @@ const grid = [
 let clickedCellsArray = [];
 // initialize array for blocked Cells
 let blockedCellsArray = [];
-
+// flag to mark when game has ended.
+let hasGameEnded;
 //Check localStorage for present score
 const storedScore = localStorage.getItem("score");
 if (storedScore) {
@@ -41,6 +42,8 @@ const displayMessage = (msg) => {
         // Empty the clicked and blocked cells arrays.
         clickedCellsArray = [];
         blockedCellsArray = [];
+        // Reset the game end state to allow the play again.
+        hasGameEnded = false;
     });
 
     message.appendChild(text);
@@ -145,11 +148,13 @@ const hasGameWon = (blockedCellsArray) => {
     if (isRowWin(blockedCellsArray) || isColWin(blockedCellsArray) || isDiagWin(blockedCellsArray)) {
         console.log("The Winning function was called, and the Game has won.");
         // Display message to the user.
-        const msg = "You Lose!, Better luck next time 😭"
+        const msg = "You Lose!, Better luck next time 😭";
         displayMessage(msg);
         // Decrement score value by -2.
         const factor = -2;
         handleScore(factor)
+        // Set game end flag true to prevent any further play.
+        hasGameEnded = true;
     }
     return isRowWin(blockedCellsArray) || isColWin(blockedCellsArray) || isDiagWin(blockedCellsArray)
 }
@@ -255,9 +260,15 @@ grid.flat().map((cell) => {
     const cellElement = document.createElement("div");
     cellElement.innerText = "";
 
+    hasGameEnded = false;
     isProcessing = false;
 
     cellElement.addEventListener("click", async () => {
+        // Prevents the user from clicling after game has ended.
+        if (hasGameEnded) {
+            console.log("The game has ended !!");
+            return;
+        };
         // This prevents the user from clicking an already occupied cell.
         if (cellElement.classList.contains("clicked") || cellElement.classList.contains("blocked")) {
             console.log("Cell already occupied!");
@@ -286,14 +297,8 @@ grid.flat().map((cell) => {
                 console.log(clickedCellsArray);
             });
         }
-
-        console.log("At this point the blocked cells are: ", blockedCellsArray.length); 
         MarkCellX();
         
-       // if (clickedCellsArray.length == 0 || blockedCellsArray.length > 1) {
-           
-       // }
-
         // Validation logic for user input on occupied cell.
         const isPrevSameAsCurrent = (clickedCellsArray.at(-1) == clickedCellsArray.at(-2)); 
         console.log("is the lastest cell same as the former ", isPrevSameAsCurrent )
@@ -516,6 +521,8 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
                 // Handle score state 
                 const factor = 2;
                 handleScore(factor);
+                // Set game end flag true to prevent any further play.
+                hasGameEnded = true;
             
             } else if (clickedCellsArray.length == 5 && blockedCellsArray.length === 4) {
                 // Here the game ends at a draw display the draw message and reset the game.
@@ -523,6 +530,8 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
                 displayMessage(msg);
                 // Deduct score by -1 to encourage the user to play again. 
                 handleScore(-1);
+                // Set game end flag true to prevent any further play.
+                hasGameEnded = true;
 
             } else {
                 console.log("The user nor game has neither made a winning move, try and block");
@@ -746,6 +755,8 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
         // Reset the 'Processing' flag after the timeout to allow the user click another cell.
         isProcessing = false
         console.log("Game is DONE processing");
+        
+        console.log("The game has ended: ", hasGameEnded);
     }, 1000);
     // End of Enclose for entire game strategy logic in a timeout to simulate game processing.
     });
