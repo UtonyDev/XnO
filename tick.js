@@ -37,8 +37,16 @@ const displayMessage = (msg) => {
             cell.classList.remove("clicked", "blocked", "purpleTxt", "orangeTxt");
             cell.innerText = "";
         });
-        messageContainer.classList.replace("show-message", "hide-message");
-        messageContainer.innerHTML = "";
+        messageContainer.classList.remove("show-message");
+        messageContainer.classList.add("hide-message");
+        // Event listener for when the transition ends
+        const clearContentAfterTransition = () => {
+            messageContainer.innerHTML = "";
+            // Remove the event listener to avoid memory leaks and multiple firings
+            messageContainer.removeEventListener('transitionend', clearContentAfterTransition);
+        };
+
+        messageContainer.addEventListener('transitionend', clearContentAfterTransition);
         // Empty the clicked and blocked cells arrays.
         clickedCellsArray = [];
         blockedCellsArray = [];
@@ -49,7 +57,8 @@ const displayMessage = (msg) => {
     message.appendChild(text);
     message.appendChild(button);
 
-    messageContainer.classList.replace("hide-message", "show-message");
+    messageContainer.classList.remove("hide-message");
+    messageContainer.classList.add("show-message");
     messageContainer.appendChild(message);
 }
 // Function to handle score state 
@@ -757,7 +766,7 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
         console.log("Game is DONE processing");
         
         console.log("The game has ended: ", hasGameEnded);
-    }, 1000);
+    }, 500);
     // End of Enclose for entire game strategy logic in a timeout to simulate game processing.
     });
 }

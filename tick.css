@@ -115,10 +115,9 @@ body {
     color: #f1ae30;
 }
 
-#message {
+.message {
     position: absolute;
     top: 20%;
-    transition: all 0.5s ease-in-out;
     margin-top: 10px;
     color: #333;
     border-radius: 10px;
@@ -134,13 +133,16 @@ body {
     align-items: center;
     flex-direction: row;
     z-index: 300;
+    /* Add the transition here */
+    transition: transform 0.5s ease-in-out;
 }
-
-.hide-message {
+/* Hidden state (default) */
+.message.hide-message {
     transform: translateY(-1000%);
 }
 
-.show-message {
+/* Revealed state */
+.message.show-message {
     transform: translateY(0);
 }
 
