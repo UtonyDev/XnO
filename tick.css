@@ -3,9 +3,8 @@ body {
     background-color: white;
     text-align: center;
     display: grid;
-    justify-items: center;
-    align-items: center;
-    height: 100vh;
+    place-items: center; /* shortcut for justify-items + align-items */
+    height: 100vh; /* full screen height */
     width: 100%;
     grid-template-rows: 1fr 9fr;
     grid-template-areas: 
@@ -13,6 +12,7 @@ body {
         'game-content'
     ;
     overflow: hidden;
+    box-sizing: border-box
 }
 
 .inter-rounded {
@@ -79,8 +79,8 @@ body {
 .logoN {
     font-size: 2em;
     position: absolute;
-    top: 25%;
-    left: 35%;
+    top: 20%;
+    left: 32.5%;
     margin: 10px;
 }
 
@@ -140,10 +140,12 @@ body {
 .settings {
     position: absolute;
     top: 10%;
-    right: 5%;
-    left: 5%;
+    left: 2.5%;
+    right: 2.5%;
+    margin: 0 auto;
     width: 90%;
     height: 70vh;
+    padding: 0.2em;
     border-radius: 15px;
     background-color: #f5f5f5;
     box-shadow: 0 4px 8px rgba(153, 243, 158, 0.1);
@@ -152,10 +154,24 @@ body {
     transform-origin: top right;
 }
 
-.settings-icon {
+.settings-icon-img {
     position: relative;
     margin-right: 5%;
     z-index: 500;
+}
+
+.settings-icon {
+    transform: rotate(0deg);
+    transition: transform 0.5s ease;
+}
+
+.settings-icon:hover {
+    cursor: pointer;
+}
+
+.rotate-icon {
+    transform: rotate(180deg);
+    transition: transform 0.5s ease;
 }
 
 .settings.hide-settings {
@@ -170,32 +186,58 @@ body {
 .settings-list {
     display: flex;
     flex-direction: column;
-    justify-content: baseline;
-    align-items: baseline;
+    justify-content:flex-start;
+    align-items: flex-start;
     padding: 0;
     gap: 0.2em;
 }
 
 .setting {
     position: relative;
+    width: 100%;
+    text-align: left;
     font-size: 1.5em;
     color: #3d3d3d;
     list-style-type: none;
-    margin: 0.2em;
-    padding-left: 0.2em;
-    left: 0;
+    padding: 0.4em;
+    min-width: 100%;
+    overflow: hidden;
+}
+
+.slider-wrapper {
+    position: relative;
+    width: 100%;
+    left: 2.5%;
+    display: flex;
+    flex-shrink: 1;
+    flex-grow: 1;
+    min-width: 0;
+    padding-top: 0.5em;
 }
 
 #speed {
    -webkit-appearance: none;  /* Override default CSS styles */
     appearance: none;
-    width: 100%; /* Full-width */
+    width: 90%; /* Full-width */
     background: #d114d1;
     outline: none;
-    border-radius: 0.2em; 
-    opacity: 0.7; 
+    border: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 0.5em; 
+    opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
+
+}
+
+.speed-title {
+    position: relative;
+}
+
+#output {
+    position: relative;
+    font-size: 0.8em;
 }
 
 .reset {

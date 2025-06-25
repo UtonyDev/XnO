@@ -9,21 +9,79 @@ let clickedCellsArray = [];
 // initialize array for blocked Cells
 let blockedCellsArray = [];
 // flag to mark when game has ended.
+
+// Player turn mechanism.
+let currentPlayer 
+currentPlayer = 1; // Let 1 and 0 represent human and AI player turn respectively.
+localStorage.setItem('currentPlayer', currentPlayer);
+console.log("The current player is: ", localStorage.getItem('currentPlayer'));
+
 let hasGameEnded;
-//Check localStorage for present score
+//Check localStorage for present score and set UI.
 const storedScore = localStorage.getItem("score");
 if (storedScore) {
     const scoreValue = document.querySelector("#score");
     scoreValue.innerText = storedScore;
-} 
+}
 
+// Check localStorage for present speed level and set it.
+const speedValue = localStorage.getItem('speedLevel');    
+const slider = document.getElementById('speed');
+const output = document.getElementById('output');
+
+const setOutputPosition = (speedLvl) => {
+    const sliderWidth = slider.offsetWidth;
+    console.log(`The slider width is: ${sliderWidth}px`);
+    // By Linear Interpolation: let x rep speedLevel and y rep output position in pixels.
+    let x1 = 2000; // max speedLevel
+    let x0 = 500; // min speedLevel
+    let y1 = sliderWidth - (sliderWidth * 0.054); // max output position in pixels offset by 5.4% to center.
+    let y0 = 0; // min output position in pixels
+    let x = parseInt(speedLvl); // Current speed level value;
+    console.log("the current speed X: ", x);
+    let y;
+    y = y0 + ( ((y1 - y0) * (x - x0)) / (x1 - x0) );
+    console.log("the current y output is: ", y);
+    // Use y value to set the output position.
+    output.style.left = y + "px";
+}
+
+if (speedValue) {
+    slider.value = parseInt(speedValue);
+    setOutputPosition(parseInt(speedValue))
+    output.innerHTML = speedValue;
+} else {
+    output.innerHTML = 1000;
+}
 // Function to handle settings.
 const settingsIcon = document.querySelector('.settings-icon');
 const settings = document.querySelector('.settings');
 
-settingsIcon.addEventListener('click', () => {
+// Function to handle slider.
+console.log(parseInt(slider.value));
+let speedLevel;
+
+slider.addEventListener('input', (e) => {
+    speedLevel = e.target.value;
+    setOutputPosition(Number(speedLevel));
+    localStorage.setItem('speedLevel', speedLevel);
+    output.innerHTML = e.target.value;
+});
+
+console.log("The speed level is: ", parseInt(speedValue));
+
+settingsIcon.addEventListener('click', () => { 
+    // Replace the Gear icon with the close icon while rotating as they toggle.
+    const isRotated = settingsIcon.classList.contains('rotate-icon')  
+    settingsIcon.classList.toggle('rotate-icon');
+    settingsIcon.setAttribute('src', isRotated ? 'settings.png' : 'close.png');
+
+    const speedValue = localStorage.getItem('speedLevel') || 1250; // Default to 1000 if not set.
+    output.innerHTML = speedValue;
+    setOutputPosition(Number(speedValue));
     settings.classList.toggle('hide-settings');
-})
+    console.log("The current Game SPEED is: ", Number(speedValue));
+});
 
 // Function to display UI for message and action based on game outcome.
 const displayMessage = (msg) => {
@@ -61,6 +119,11 @@ const displayMessage = (msg) => {
         blockedCellsArray = [];
         // Reset the game end state to allow the play again.
         hasGameEnded = false;
+        // After game session has ended switch current player.
+        const sessionPlayer = localStorage.getItem('currentPlayer');
+        console.log("The session player is: ",sessionPlayer);
+        currentPlayer = sessionPlayer == 1 ? 0 : 1; // Here 0 indicates AI turns.
+        localStorage.setItem('currentPlayer',  currentPlayer);
     });
 
     message.appendChild(text);
@@ -76,7 +139,7 @@ const handleScore = (factor) => {
     const scoreValue = document.querySelector("#score");
     const currentScore = parseInt(scoreValue.innerText) || 0;
     console.log("current score is", currentScore + factor);
-    scoreValue.innerText = (currentScore + factor < 0) ? "0000" 
+    scoreValue.innerText = (currentScore + factor < 0) ? `-${((currentScore + factor).toString()).replace('-', (currentScore + factor > -10 ? '000' : '00'))}`
      : (currentScore + factor >= 10) ? "00" + (currentScore + factor)
      : "000" + (currentScore + factor);
     const score = scoreValue.innerText;
@@ -174,6 +237,7 @@ const hasGameWon = (blockedCellsArray) => {
         handleScore(factor)
         // Set game end flag true to prevent any further play.
         hasGameEnded = true;
+        
     }
     return isRowWin(blockedCellsArray) || isColWin(blockedCellsArray) || isDiagWin(blockedCellsArray)
 }
@@ -542,6 +606,7 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
                 handleScore(factor);
                 // Set game end flag true to prevent any further play.
                 hasGameEnded = true;
+                
             
             } else if (clickedCellsArray.length == 5 && blockedCellsArray.length === 4) {
                 // Here the game ends at a draw display the draw message and reset the game.
@@ -551,6 +616,7 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
                 handleScore(-1);
                 // Set game end flag true to prevent any further play.
                 hasGameEnded = true;
+                
 
             } else {
                 console.log("The user nor game has neither made a winning move, try and block");
@@ -773,10 +839,14 @@ async function blockCell(randomCell, options, clickedCellsArray, blockedCellsArr
         } 
         // Reset the 'Processing' flag after the timeout to allow the user click another cell.
         isProcessing = false
+        // After game session has ended switch current player.
+        const sessionPlayer = localStorage.getItem('currentPlayer');
+        currentPlayer = sessionPlayer == 1 ? 0 : 1; // Here 0 indicates AI turns.
+        localStorage.setItem('currentPlayer',  currentPlayer);
         console.log("Game is DONE processing");
         
         console.log("The game has ended: ", hasGameEnded);
-    }, 500);
+    }, speedLevel);
     // End of Enclose for entire game strategy logic in a timeout to simulate game processing.
     });
 }
